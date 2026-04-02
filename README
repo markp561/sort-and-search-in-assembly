@@ -1,0 +1,8 @@
+This program allows the user to enter the size of their data and then enter their data
+The program accepts integer inputs and stores the inputs as contiguous bytes of memory.
+The program checks if the array is sorted in an ascending order.
+If the array is not sorted then the quick sort algorithm is used to sort it.
+After the array is sorted the program prompts the user to enter a search target and searches for the target using the binary search algorithm.
+If the target is found, a message is printed to notify the user that the target was found and the index is displayed.
+If the target was not found, a message is printed to notify the user that the target was not found.
+Finally, a message is printed to notify the user that the program has ended and then the program exits.
