@@ -1,3 +1,10 @@
+To run this program:
+Assemble: nasm -f elf32 main.asm
+Link:     ld -m elf_i386 main.o
+Execute:  ./a.out
+
+nasm -f elf32 main.asm && ld -m elf_i386 main.o
+
 This program allows the user to enter the size of their data and then enter their data
 The program accepts integer inputs and stores the inputs as contiguous bytes of memory.
 The program checks if the array is sorted in an ascending order.

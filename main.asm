@@ -1,6 +1,3 @@
-; nasm -f elf32 main.asm && ld -m elf_i386 main.o
-
-
 section     .data
     hline           db "----------------------------------------", 0x0A
     hline_len       equ ($ - hline)
@@ -44,14 +41,14 @@ section     .text
 
 _start:
     ; print horizontal line
-    mov ecx, hline
-    mov eax, 4
-    mov ebx, 1
-    mov edx, hline_len
-    int 0x80
+    mov ecx, hline                  ; move hline into ecx to print it
+    mov eax, 4                      ; print system call
+    mov ebx, 1                      ; set the file descriptor
+    mov edx, hline_len              ; mov the length
+    int 0x80                        ; interrupt
 
     ; print message "Enter the array size: "
-    mov ecx, msg1
+    mov ecx, msg1                   
     mov eax, 4
     mov ebx, 1
     mov edx, msg1_len
@@ -59,7 +56,7 @@ _start:
 
     ; take user input for array length
     mov eax, 3                      ; system call for reading
-    mov ebx, 0                      
+    mov ebx, 0                      ; set file descriptor
     mov ecx, buffer                 ; store input in buffer
     mov edx, 16                     ; size of buffer
     int 0x80                        ; interrupt
@@ -84,12 +81,12 @@ _start:
     mov edx, msg2_len
     int 0x80
 
-    ; fill_array function takes arguments: the array, length of array, the buffer, and a counter ecx
+    ; fill_array function takes arguments: the array, length of array, the buffer, and a counter
     ; it fills the array with user input
-    mov edi, arr
-    mov esi, [arr_len]
-    mov edx, buffer
-    xor ecx, ecx
+    mov edi, arr                    ; move array buffer into edi
+    mov esi, [arr_len]              ; move array length into esi
+    mov edx, buffer                 ; move buffer into edx
+    xor ecx, ecx                    ; zero out ecx
 
     call fill_array
 
@@ -107,12 +104,13 @@ _start:
     mov edx, array_msg1_len
     int 0x80
     
-    ; print_array function takes three arguments: a pointer to base address of the array, length of the array, and pointer to the buffer
+    ; print_array function takes arguments: a pointer to base address of the array, length of the array, pointer to the buffer, and a counter
     ; print the array before sorting
-    mov edi, arr
-    mov esi, [arr_len]
-    mov edx, buffer
-    xor ecx, ecx
+    mov edi, arr                    ; move array buffer into edi 
+    mov esi, [arr_len]              ; move array length into esi
+    mov edx, buffer                 ; move buffer into edx
+    xor ecx, ecx                    ; zero out ecx
+
     call print_array
                                 
     ; the quicksort function takes three arguments: a pointer to the base address of the array, and low and a high indices
@@ -329,7 +327,7 @@ print_array:
     mov eax, 4
     mov ebx, 1
     int 0x80
-    
+
     pop edx
     pop edi                     ; restore the array
     pop ecx                     ; restore the array length
@@ -351,15 +349,15 @@ print_array:
 
 
 atoi:
-    xor eax, eax
-    xor ebx, ebx
+    xor eax, eax                       ; clear eax
+    xor ebx, ebx                       ; clear ebx
 
-    mov dl, [edi]
-    cmp dl, '-'
-    jne .loop
+    mov dl, [edi]                      ; move value stored in [edi] to 8-bit register dl
+    cmp dl, '-'                        ; compare byte stored in dl to minus sign '-'
+    jne .loop                          ; if dl is not equal to minus sign then jump to the loop
 
-    mov bl, 1
-    inc edi
+    mov bl, 1                          ; if dl is equal to minus sign then move 1 into bl. Here I set the value of bl to 1 and use it as a boolean to later determine if the input was negative or not 
+    inc edi                            ; increment edi to go to the next byte in the buffer
     jmp .loop
 .loop:
     movzx edx, byte [edi]
@@ -373,9 +371,9 @@ atoi:
     inc edi
     jmp .loop
 .end:
-    cmp bl, 1
-    jne .done
-    neg eax
+    cmp bl, 1                          ; compare bl to 1
+    jne .done                          ; if bl is 1 then the input was negative and the converted integer should be negated to make it negative
+    neg eax                            ; negate eax which will be the return value
 .done:
     ret
 
@@ -383,42 +381,42 @@ atoi:
 
 
 itoa:
-    mov ecx, 10                 ; divisor
-    xor esi, esi                ; clear esi
+    mov ecx, 10                        ; divisor
+    xor esi, esi                       ; clear esi
     
-    mov ebx, eax
-    cmp eax, 0
-    jge .loop1
+    mov ebx, eax                
+    cmp eax, 0                         ; compare eax to zero to check if its positive
+    jge .loop1                         ; if eax is positive, then jump to the loop
     
-    neg eax
+    neg eax                            ; if not then negate eax to make it positive
 .loop1:
-    cdq
-    idiv ecx                    ; divide edx:eax by ecx
-    push edx                    ; push the remainder onto the stack
-    inc esi                     ; increment the remainder counter
-    test eax, eax               ; check if eax is zero
-    jne .loop1                  ; if not then jump to next iteration. if it is then go to loop2
+    cdq                                ; prepare edx:eax for division
+    idiv ecx                           ; divide edx:eax by ecx (10)
+    push edx                           ; push the remainder onto the stack
+    inc esi                            ; increment the remainder counter
+    test eax, eax                      ; check if eax is zero
+    jne .loop1                         ; if not then jump to next iteration. if it is then go to loop2
 
-    mov eax, edi                ; this will be returned. it is the base address of the buffer
+    mov eax, edi                       ; this will be returned. it is the base address of the buffer
 
-    cmp ebx, 0
-    jge .loop2
+    cmp ebx, 0                         ; compare ebx, which contains the original value of eax, to 0
+    jge .loop2                         ; if ebx is positive, then jump to loop2
     
-    mov byte [edi], '-'
-    inc edi
+    mov byte [edi], '-'                ; if not, then mov a negative sign "-" to edi. This will be the first character in edi, and denotes that the integer is negative
+    inc edi                            ; increment edi to move to the next byte in the buffer
 .loop2:
-    pop edx                     ; pop a remainder from the stack
-    add dl, '0'                 ; append a '0' to convert it to ascii
-    mov [edi], dl               ; mov it into the buffer
-    inc edi                     ; increment the buffer so we can append the next digit
-    dec esi                     ; decrement the remainder counter
-    jnz .loop2                  ; if esi is not zero then jump to next iteration. if it is then the loop is done
+    pop edx                            ; pop a remainder from the stack
+    add dl, '0'                        ; append a '0' to convert it to ascii
+    mov [edi], dl                      ; mov it into the buffer
+    inc edi                            ; increment the buffer so we can append the next digit
+    dec esi                            ; decrement the remainder counter
+    jnz .loop2                         ; if esi is not zero then jump to next iteration. if it is then the loop is done
 
-    mov byte [edi], 0x20        ; append a newline character to the buffer
-    inc edi                     ; increment the buffer
+    mov byte [edi], 0x20               ; append a space character to the buffer
+    inc edi                            ; increment the buffer
 
-    mov edx, edi                ; move the address of the buffer into edx
-    sub edx, eax                ; calculate length of the buffer by subtracting the current address with the base address that was previously stored in eax
+    mov edx, edi                       ; move the address of the buffer into edx
+    sub edx, eax                       ; calculate length of the buffer by subtracting the current address with the base address that was previously stored in eax
 
     ret
 
