@@ -1,39 +1,51 @@
 section     .data
-    hline           db "----------------------------------------", 0x0A
-    hline_len       equ ($ - hline)
-
-    array_msg1      db "Original Array: ", 0x0A
-    array_msg1_len  equ ($ - array_msg1)
-
-    array_msg2      db "Sorted Array: ", 0x0A
-    array_msg2_len  equ ($ - array_msg2)
-
-    msg1            db "Enter the array size: "
-    msg1_len        equ ($ - msg1)
-
-    msg2            db "Enter the contents of the array: ", 0x0A
-    msg2_len        equ ($ - msg2)
-
-    msg3            db "Enter the search target: "
-    msg3_len        equ ($ - msg3)
-
-    success_msg     db "The search target was found at index: "
-    success_msg_len equ ($ - success_msg)
-
-    failure_msg     db "The search target was not found"
-    failure_msg_len equ ($ - failure_msg)
     
-    exit_msg        db "Program Ended", 0x0A
-    exit_msg_len    equ ($ - exit_msg)
+       
+    array_msg1              db "Original order: "
+    array_msg1_len          equ ($ - array_msg1)
 
-    newline         db 0x0A
+    array_msg2              db "Sorted order:   "
+    array_msg2_len          equ ($ - array_msg2)
 
-    arr_len         dd 0
+    msg1                    db "Please enter the size of your data: "
+    msg1_len                equ ($ - msg1)
+
+    msg2                    db "Please enter your data: ", 0x0A
+    msg2_len                equ ($ - msg2)
+
+    msg3                    db "Please enter a search target: "
+    msg3_len                equ ($ - msg3)
+
+    overflow_msg1           db "Size of data exceeds maximum of "
+    overflow_msg1_len       equ ($ - overflow_msg1)
+
+    overflow_msg2           db "elements", 0x0A, "Please enter a smaller size: "
+    overflow_msg2_len       equ ($ - overflow_msg2)
+
+    sorting_msg             db "Sorting data...", 0x0A
+    sorting_msg_len         equ ($ - sorting_msg)
+
+    search_success_msg      db "The search target was found at index: "
+    search_success_msg_len  equ ($ - search_success_msg)
+
+    search_failure_msg      db "The search target was not found"
+    search_failure_msg_len  equ ($ - search_failure_msg)
+    
+    exit_msg                db "Program Ended", 0x0A
+    exit_msg_len            equ ($ - exit_msg)
+
+    nl                      db 0x0A
+    hl                      db "--------------------------------------------------", 0x0A
+    hl_len                  equ ($ - hl)
+
+    arr_len                 dd 0
+    max_elements            equ 10000
 
 
 section     .bss
-    buffer      resb 16             ; reserve 16 bytes as a buffer used for user input
-    arr         resd 10000          ; reserve 10000 4-byte words for the array
+    buffer                  resb 16             ; reserve 16 bytes as a buffer used for user input
+    arr                     resd max_elements   ; reserve 10000 4-byte words for the array
+
 
 section     .text
     global      _start
@@ -41,45 +53,60 @@ section     .text
 
 _start:
     ; print horizontal line
-    mov ecx, hline                  ; move hline into ecx to print it
-    mov eax, 4                      ; print system call
-    mov ebx, 1                      ; set the file descriptor
-    mov edx, hline_len              ; mov the length
-    int 0x80                        ; interrupt
-
-    ; print message "Enter the array size: "
-    mov ecx, msg1                   
-    mov eax, 4
-    mov ebx, 1
-    mov edx, msg1_len
-    int 0x80
+    call horizontal_line
+    
+    ; print message 1, "Please enter the size of your data: "
+    mov edi, msg1
+    mov esi, msg1_len
+    call print
 
     ; take user input for array length
+.data_size_input:
     mov eax, 3                      ; system call for reading
     mov ebx, 0                      ; set file descriptor
     mov ecx, buffer                 ; store input in buffer
     mov edx, 16                     ; size of buffer
     int 0x80                        ; interrupt
 
-    ; move user input into array length
     xor eax, eax                    ; clear eax
     mov edi, buffer                 ; move the buffer into edi
     call atoi                       ; convert ascii to integer
+
+    cmp eax, max_elements
+    jle .valid_data_size
+
+    ; print message "Size of data exceeds maximum of 10000 elements. Please re-enter a smaller size: "
+    mov edi, overflow_msg1
+    mov esi, overflow_msg1_len
+    call print
+
+    mov eax, max_elements
+    mov edi, buffer
+    call itoa
+
+    mov edi, eax
+    mov esi, edx
+    call print
+
+    mov edi, overflow_msg2
+    mov esi, overflow_msg2_len
+    call print
+
+    jmp .data_size_input
+
+ 
+.valid_data_size:
+
     mov [arr_len], eax              ; store the integer in the arr_len label
-
+    
     ; print horizontal line
-    mov ecx, hline
-    mov eax, 4
-    mov ebx, 1
-    mov edx, hline_len
-    int 0x80
+    call horizontal_line
 
-    ; print message "Enter the contents of the array: "
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, msg2
-    mov edx, msg2_len
-    int 0x80
+
+    ; print message 2 "Please enter your data"
+    mov edi, msg2
+    mov esi, msg2_len
+    call print    
 
     ; fill_array function takes arguments: the array, length of array, the buffer, and a counter
     ; it fills the array with user input
@@ -91,18 +118,14 @@ _start:
     call fill_array
 
     ; print horizontal line
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, hline
-    mov edx, hline_len
-    int 0x80
+    call horizontal_line
 
-    ; print message "Original Array: "
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, array_msg1
-    mov edx, array_msg1_len
-    int 0x80
+
+    ; print message "Original order: "
+    mov edi, array_msg1
+    mov esi, array_msg1_len
+    call print
+
     
     ; print_array function takes arguments: a pointer to base address of the array, length of the array, pointer to the buffer, and a counter
     ; print the array before sorting
@@ -112,35 +135,46 @@ _start:
     xor ecx, ecx                    ; zero out ecx
 
     call print_array
-                                
+
+    ; print a newline
+    call newline
+    
+    ; check if the array is already in an ascending order, if not then sort it
+    mov edi, arr
+    mov esi, [arr_len]
+    xor edx, edx                    ; default check is for ascending order, can set as 1 for descending
+    xor ecx, ecx                    ; zero out ecx to use as iterator for the array
+
+    call check_order
+
+    test eax, eax
+    jz sort
+    jnz search
+    
+sort:
+    ; print a horizontal line
+    call horizontal_line
+
+    ; print message "Sorting data..."
+    mov edi, sorting_msg
+    mov esi, sorting_msg_len
+    call print
+
     ; the quicksort function takes three arguments: a pointer to the base address of the array, and low and a high indices
     mov edi, arr
     mov esi, 0
     mov edx, [arr_len]
     dec edx
-
     call quicksort
 
-    ; print a newline
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, newline
-    mov edx, 1
-    int 0x80
-
     ; print horizontal line
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, hline
-    mov edx, hline_len
-    int 0x80
+    call horizontal_line
+
 
     ; print message "Sorted Array: "
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, array_msg2
-    mov edx, array_msg2_len
-    int 0x80
+    mov edi, array_msg2
+    mov esi, array_msg2_len
+    call print
 
     ; print the sorted array
     mov edi, arr
@@ -148,26 +182,17 @@ _start:
     mov edx, buffer
     call print_array
 
-    ; print newline
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, newline
-    mov edx, 1
-    int 0x80
-   
-    ; print horizontal line
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, hline
-    mov edx, hline_len
-    int 0x80
+    ; print a newline
+    call newline
+
+search:
+    ;print horizontal line
+    call horizontal_line
 
     ; print message "Enter the search target: "
-    mov ecx, msg3
-    mov eax, 4
-    mov ebx, 1
-    mov edx, msg3_len
-    int 0x80
+    mov edi, msg3
+    mov esi, msg3_len
+    call print
     
     ; take user input for search target
     mov eax, 3
@@ -194,74 +219,46 @@ _start:
     jg success
     je failure
 
-
 success:
     ; convert the result of binary search to ascii to be printed
     mov edi, buffer
     call itoa
 
-    push eax                    ; preserve the result of binary search
-    push edx                    ; preserve the length of the result
-
     ; print horizontal line
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, hline
-    mov edx, hline_len
-    int 0x80
-    
+    call horizontal_line
     
     ; print "The search target was found at index: "
-    mov ecx, success_msg
-    mov eax, 4
-    mov ebx, 1
-    mov edx, success_msg_len
-    int 0x80
+    mov edi, search_success_msg
+    mov esi, search_success_msg_len
+    call print
 
-    pop edx                     ; restore edx so we can use the length of the result
-    pop eax                     ; restore eax so we can use the result of binary search
-
-    ; print the result
-    mov ecx, eax
-    mov eax, 4
-    mov ebx, 1
-    int 0x80
+    ; print the result of binary search
+    mov edi, eax
+    mov esi, 1
+    call print
 
     jmp exit
 failure:
     ; print horizontal line
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, hline
-    mov edx, hline_len
-    int 0x80
+    call horizontal_line
 
-    ; print the message corresponding to the search target not being found in the array
-    mov ecx, failure_msg
-    mov eax, 4
-    mov ebx, 1
-    mov edx, failure_msg_len
-    int 0x80
-
+    ; print the message "The search target was not found"
+    mov edi, search_failure_msg
+    mov esi, search_failure_msg_len
+    call print
+    
     jmp exit
 exit:
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, newline
-    mov edx, 1
-    int 0x80
-    ; print the message "Program Ended"
-    mov ecx, exit_msg
-    mov eax, 4
-    mov ebx, 1
-    mov edx, exit_msg_len
-    int 0x80
+    ; print a newline
+    call newline
 
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, hline
-    mov edx, hline_len
-    int 0x80
+    ; print the message "Program Ended"
+    mov edi, exit_msg
+    mov esi, exit_msg_len
+    call print
+
+    ; print a horizontal line
+    call horizontal_line
 
     ; exit program
     mov eax, 1
@@ -304,6 +301,125 @@ fill_array:
 
 
 
+; arguments: arr, arr_len, comparison function (i.g. a < b, a > b)
+check_order:
+    mov eax, 1                      ; initialize eax with value 1 indicating the array is sorted
+
+    cmp edx, 1                      ; the function by default checks for ascending order but the user may specify to check descending order by setting edx to 1 before making the function call
+    je .descending_check
+    jne .ascending_check
+
+.ascending_check:                   ; this section checks if the array is in an ascending order
+    cmp ecx, esi                    ; check if ecx, the iterator count, is less than the size of the array
+    jge .end                        ; if not then the loop is over and we should exit
+    
+    ; move the element at index ecx into ebx
+    mov ebx, [edi + ecx*4]          ; A[i]
+    inc ecx
+    ; move the element at index ecx + 1 into edx
+    mov edx, [edi + ecx*4]          ; A[i + 1]
+    
+    cmp ebx, edx                    ; compare ebx to edx
+    jg .check_fail                  ; if ebx is greater than edx, meaning an element is larger than the element that comes after itm then the array is not in an ascending order and the check has failed
+             
+    inc ecx                         ; otherwise increment the counter, ecx
+    jmp .ascending_check            ; and jump to the start of the loop
+
+
+.descending_check:                  ; this section does the same thing, but checks for a descending order
+    cmp ecx, esi 
+    jge .end 
+
+    mov ebx, [edi + ecx*4]
+    inc ecx
+    mov edx, [edi + ecx*4]
+
+    cmp [edi], edx
+    jl .check_fail
+ 
+    inc ecx
+    jmp .descending_check
+
+.check_fail:                        ; in this section, the check has failed so eax is set to 0, indicating the array is not correctly ordered
+    xor eax, eax                    ; xor eax with itself to set it to zero
+    jmp .end                        ; jump to the end
+.end:
+    ret                             ; exit the function by returning
+
+
+
+
+; this function prints a newline characters
+newline:            
+    ; save the following registers
+    push eax                        
+    push ebx
+    push ecx
+    push edx
+    
+    ; use print system call to print nl, which contains hexadecimal representation for newline character, 0x0A
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, nl
+    mov edx, 1
+    int 0x80
+    
+    ; pop all the registers that were pushed to restore their contents
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    
+    ret
+
+; this function prints a horizontal line of fifty dashes, "-"
+horizontal_line:
+    ; save registers
+    push eax
+    push ebx
+    push ecx
+    push edx
+    
+    ; use print system call to print hl, which contains a string of fifty dashes
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, hl
+    mov edx, hl_len
+    int 0x80
+    
+    ; pop all the pushed registers to restore their contents
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    
+    ret
+
+
+; this function takes a string and prints it
+; a number should be converted to ascii, using the itoa function, before being passed to the print function
+print:
+    ; save registers
+    push eax
+    push ebx
+    push ecx
+    push edx
+
+    ; use print system call to print message held in edi, with length held in esi
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, edi
+    mov edx, esi
+    int 0x80
+
+    ; restore the registers
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    
+    ret
+
 
 ; parameters: array, start index, array length, buffer
 print_array:
@@ -318,17 +434,18 @@ print_array:
     push ecx                    ; preserve the array length
     push edi                    ; preserve the array
     
-    mov edi, edx
-    push edx
+    mov edi, edx                ; move the buffer into edi
+    push edx                    ; preserve the buffer
 
-    call itoa
-        
-    mov ecx, eax
+    call itoa                   ; use itoa function to convert number to string
+   
+    ; use print syscall to print the element of the array
+    mov ecx, eax                
     mov eax, 4
     mov ebx, 1
     int 0x80
 
-    pop edx
+    pop edx                     ; restroe the buffer
     pop edi                     ; restore the array
     pop ecx                     ; restore the array length
     pop esi                     ; restore the counter
@@ -336,44 +453,37 @@ print_array:
     inc esi                     ; increment the counter
     jmp .loop                   ; jump to the next iteration
 .end:
-    ; print a newline
-    mov ecx, 0x0A
-    mov eax, 4
-    mov ebx, 1
-    mov edx, 1
-    int 0x80
-
     ret
 
 
 
 
 atoi:
-    xor eax, eax                       ; clear eax
-    xor ebx, ebx                       ; clear ebx
+    xor eax, eax                        ; clear eax
+    xor ebx, ebx                        ; clear ebx
 
-    mov dl, [edi]                      ; move value stored in [edi] to 8-bit register dl
-    cmp dl, '-'                        ; compare byte stored in dl to minus sign '-'
-    jne .loop                          ; if dl is not equal to minus sign then jump to the loop
+    mov dl, [edi]                       ; move value stored in [edi] to 8-bit register dl
+    cmp dl, '-'                         ; compare byte stored in dl to minus sign '-'
+    jne .loop                           ; if dl is not equal to minus sign then jump to the loop
 
-    mov bl, 1                          ; if dl is equal to minus sign then move 1 into bl. Here I set the value of bl to 1 and use it as a boolean to later determine if the input was negative or not 
-    inc edi                            ; increment edi to go to the next byte in the buffer
+    mov bl, 1                           ; if dl is equal to minus sign then move 1 into bl. Here I set the value of bl to 1 and use it as a boolean to later determine if the input was negative or not 
+    inc edi                             ; increment edi to go to the next byte in the buffer
     jmp .loop
 .loop:
-    movzx edx, byte [edi]
-    cmp dl, 0x0A
-    je .end
+    movzx edx, byte [edi]               ; move a byte from the buffer into edx, padded with zeros everywhere else
+    cmp dl, 0x0A                        ; compare the byte from edx to the newline character
+    je .end                             ; if dl == newline, then the last character in the string has already been converted to an integer
 
-    imul eax, 10
-    sub edx, '0'
-    add eax, edx
+    imul eax, 10                        ; eax contains the converted integer. we add a zero to it by multiplying by 10
+    sub edx, '0'                        ; subtract from the byte in edx '0' which converts it to an integer
+    add eax, edx                        ; add the converted integer to eax
 
-    inc edi
+    inc edi                             ; increment the buffer to go to the next character
     jmp .loop
 .end:
-    cmp bl, 1                          ; compare bl to 1
-    jne .done                          ; if bl is 1 then the input was negative and the converted integer should be negated to make it negative
-    neg eax                            ; negate eax which will be the return value
+    cmp bl, 1                           ; compare bl to 1
+    jne .done                           ; if bl is 1 then the input was negative and the converted integer should be negated to make it negative
+    neg eax                             ; negate eax which will be the return value
 .done:
     ret
 
