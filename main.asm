@@ -65,18 +65,18 @@ _start:
 ; allow the user to repeatedly give input until the input is valid
 ; here a valid input for the size is a number less than or equal to the maximul number of elements which is held in max_elements and is the reserved number of integers for the array buffer
 .data_size_input:
-    mov eax, 3                      ; system call for reading
-    mov ebx, 0                      ; set file descriptor
-    mov ecx, buffer                 ; store input in buffer
-    mov edx, 16                     ; size of buffer
-    int 0x80                        ; interrupt
+    mov eax, 3                                  ; system call for reading
+    mov ebx, 0                                  ; set file descriptor
+    mov ecx, buffer                             ; store input in buffer
+    mov edx, 16                                 ; size of buffer
+    int 0x80                                    ; interrupt
 
-    xor eax, eax                    ; clear eax
-    mov edi, buffer                 ; move the buffer into edi
-    call atoi                       ; convert ascii to integer
+    xor eax, eax                                ; clear eax
+    mov edi, buffer                             ; move the buffer into edi
+    call atoi                                   ; convert ascii to integer
 
-    cmp eax, max_elements           ; check if the input is less than or equal to the value of max_elements
-    jle .valid_data_size            ; if so, then jump to the next section, titled valid_data_size and continue with the program
+    cmp eax, max_elements                       ; check if the input is less than or equal to the value of max_elements
+    jle .valid_data_size                        ; if so, then jump to the next section, titled valid_data_size and continue with the program
 
     ; print message "Size of data exceeds maximum of (max_elements). Please enter a smaller size: "
     mov edi, overflow_msg1
@@ -95,14 +95,14 @@ _start:
     mov esi, overflow_msg2_len
     call print
 
-    jmp .data_size_input            ; jump to the start of the loop
+    jmp .data_size_input                        ; jump to the start of the loop
 
  
 .valid_data_size:
 
-    mov [arr_len], eax              ; store the integer in the arr_len label
+    mov [arr_len], eax                          ; store the integer in the arr_len label
     
-    call horizontal_line            ; print a horizontal line
+    call horizontal_line                        ; print a horizontal line
 
 
     ; print message  "Please enter your data"
@@ -112,10 +112,10 @@ _start:
 
     ; fill_array function takes arguments: the array, length of array, the buffer, and a counter
     ; it fills the array with user input
-    mov edi, arr                    ; move array buffer into edi
-    mov esi, [arr_len]              ; move array length into esi
-    mov edx, buffer                 ; move buffer into edx
-    xor ecx, ecx                    ; zero out ecx
+    mov edi, arr                                ; move array buffer into edi
+    mov esi, [arr_len]                          ; move array length into esi
+    mov edx, buffer                             ; move buffer into edx
+    xor ecx, ecx                                ; zero out ecx
 
     call fill_array
 
@@ -131,10 +131,10 @@ _start:
     
     ; print_array function takes arguments: a pointer to base address of the array, length of the array, pointer to the buffer, and a counter
     ; print the array before sorting
-    mov edi, arr                    ; move array buffer into edi 
-    mov esi, [arr_len]              ; move array length into esi
-    mov edx, buffer                 ; move buffer into edx
-    xor ecx, ecx                    ; zero out ecx
+    mov edi, arr                                ; move array buffer into edi 
+    mov esi, [arr_len]                          ; move array length into esi
+    mov edx, buffer                             ; move buffer into edx
+    xor ecx, ecx                                ; zero out ecx
 
     call print_array
 
@@ -144,14 +144,14 @@ _start:
     ; check if the array is already in an ascending order, if not then sort it
     mov edi, arr
     mov esi, [arr_len]
-    xor edx, edx                    ; default check is for ascending order, can set as 1 for descending
-    xor ecx, ecx                    ; zero out ecx to use as iterator for the array
+    xor edx, edx                                ; default check is for ascending order, can set as 1 for descending
+    xor ecx, ecx                                ; zero out ecx to use as iterator for the array
 
     call check_order               
 
-    test eax, eax                   ; test if the result of eax is zero or one
-    jz sort                         ; if zero then the data is not sorted and we should jump to the sort section 
-    jnz search                      ; if one then the data is correctly ordered and we can search for an element
+    test eax, eax                               ; test if the result of eax is zero or one
+    jz sort                                     ; if zero then the data is not sorted and we should jump to the sort section 
+    jnz search                                  ; if one then the data is correctly ordered and we can search for an element
     
 sort:
     ; print a horizontal line
