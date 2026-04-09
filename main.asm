@@ -273,25 +273,25 @@ exit:
 ; this function is used for populating an array with user input
 ; arguments: ecx=0, esi=array_len, edi=arr, edx=buffer
 fill_array:
-    cmp ecx, esi                    ; compare the iterator with the array size
-    jge .end                        ; if ecx is greater than or equal to the size, then exit the loop
+    cmp ecx, esi                                ; compare the iterator with the array size
+    jge .end                                    ; if ecx is greater than or equal to the size, then exit the loop
 
-    push ecx                        ; preserve ecx
-    push edi                        ; preserve edi
+    push ecx                                    ; preserve ecx
+    push edi                                    ; preserve edi
 
     ; system call for reading
     mov eax, 3                      
     mov ebx, 0
-    mov ecx, edx                    ; move the buffer into ecx to read into the buffer
-    push edx                        ; preserve the buffer
-    mov edx, 16                     ; length of the buffer
-    int 0x80                        ; interrupt
+    mov ecx, edx                                ; move the buffer into ecx to read into the buffer
+    push edx                                    ; preserve the buffer
+    mov edx, 16                                 ; length of the buffer
+    int 0x80                                    ; interrupt
 
-    pop edx                         ; restore edx
-    xor eax, eax                    ; clear eax
-    mov edi, edx                    ; move the buffer into edi
-    push edx                        ; preserve edx
-    call atoi                       ; convert the user input from ascii to integer using atoi function
+    pop edx                                     ; restore edx
+    xor eax, eax                                ; clear eax
+    mov edi, edx                                ; move the buffer into edi
+    push edx                                    ; preserve edx
+    call atoi                                   ; convert the user input from ascii to integer using atoi function
     
     ; restore these registers
     pop edx     
@@ -301,10 +301,10 @@ fill_array:
     ; move the output of atoi, the integer into the array at the current index
     mov [edi + ecx*4], eax
 
-    inc ecx                         ; increment the counter
-    jmp fill_array                  ; jump to the beginning of the loop
+    inc ecx                                     ; increment the counter
+    jmp fill_array                              ; jump to the beginning of the loop
 .end:
-    ret                             ; return
+    ret                                         ; return
 
 
 
@@ -312,33 +312,33 @@ fill_array:
 ; arguments: arr, arr_len, comparison function (i.g. a < b, a > b)
 ; arguments: edx=0 or 1, ecx=0, esi=array_length, edi=arr
 check_order:
-    mov eax, 1                      ; initialize eax with value 1 indicating the array is sorted
+    mov eax, 1                                  ; initialize eax with value 1 indicating the array is sorted
 
-    cmp edx, 1                      ; the function by default checks for ascending order but the user may specify to check descending order by setting edx to 1 before making the function call
+    cmp edx, 1                                  ; the function by default checks for ascending order but the user may specify to check descending order by setting edx to 1 before making the function call
     je .descending_check
     test edx, edx
     jz .ascending_check
 
-.ascending_check:                   ; this section checks if the array is in an ascending order
-    cmp ecx, esi                    ; check if ecx, the iterator count, is less than the size of the array
-    jg .end                         ; if not then the loop is over and we should exit
+.ascending_check:                               ; this section checks if the array is in an ascending order
+    cmp ecx, esi                                ; check if ecx, the iterator count, is less than the size of the array
+    jg .end                                     ; if not then the loop is over and we should exit
     
     ; move the element at index ecx into ebx
     mov ebx, [edi + ecx*4]          
-    inc ecx                         ; increment ecx
+    inc ecx                                     ; increment ecx
 
     ; move the element at the incremented index (ecx + 1) into edx
     mov edx, [edi + ecx*4]          
-    dec ecx                         ; decrement ecx to return to the current index
+    dec ecx                                     ; decrement ecx to return to the current index
 
-    cmp ebx, edx                    ; compare ebx to edx
-    jg .check_fail                  ; if ebx is greater than edx, meaning an element is larger than the element that comes after itm then the array is not in an ascending order and the check has failed
+    cmp ebx, edx                                ; compare ebx to edx
+    jg .check_fail                              ; if ebx is greater than edx, meaning an element is larger than the element that comes after itm then the array is not in an ascending order and the check has failed
              
-    inc ecx                         ; otherwise increment the counter, ecx
-    jmp .ascending_check            ; and jump to the start of the loop
+    inc ecx                                     ; otherwise increment the counter, ecx
+    jmp .ascending_check                        ; and jump to the start of the loop
 
 
-.descending_check:                  ; this section does the same thing, but checks for a descending order
+.descending_check:                              ; this section does the same thing, but checks for a descending order
     cmp ecx, esi 
     jge .end 
 
@@ -354,11 +354,11 @@ check_order:
     inc ecx
     jmp .descending_check
 
-.check_fail:                        ; in this section, the check has failed so eax is set to 0, indicating the array is not correctly ordered
-    xor eax, eax                    ; xor eax with itself to set it to zero
-    jmp .end                        ; jump to the end
+.check_fail:                                    ; in this section, the check has failed so eax is set to 0, indicating the array is not correctly ordered
+    xor eax, eax                                ; xor eax with itself to set it to zero
+    jmp .end                                    ; jump to the end
 .end:
-    ret                             ; exit the function by returning
+    ret                                         ; exit the function by returning
 
 
 
@@ -440,21 +440,21 @@ print:
 
 ; arguments: esi=array_len, edi=arr, edx=buffer,
 print_array:
-    mov ecx, esi                        ; move the array length into ecx
-    xor esi, esi                        ; zero out esi to use it as the iterator
+    mov ecx, esi                                ; move the array length into ecx
+    xor esi, esi                                ; zero out esi to use it as the iterator
 .loop:
-    cmp esi, ecx                        ; compare the iterator to the array length
-    jge .end                            ; if greater than or equal then exit the loop
-    mov eax, [edi + esi*4]              ; move an element from the array into eax
+    cmp esi, ecx                                ; compare the iterator to the array length
+    jge .end                                    ; if greater than or equal then exit the loop
+    mov eax, [edi + esi*4]                      ; move an element from the array into eax
 
-    push esi                            ; preserve the counter
-    push ecx                            ; preserve the array length
-    push edi                            ; preserve the array
+    push esi                                    ; preserve the counter
+    push ecx                                    ; preserve the array length
+    push edi                                    ; preserve the array
     
-    mov edi, edx                        ; move the buffer into edi
-    push edx                            ; preserve the buffer
+    mov edi, edx                                ; move the buffer into edi
+    push edx                                    ; preserve the buffer
 
-    call itoa                           ; use itoa function to convert number to string
+    call itoa                                   ; use itoa function to convert number to string
    
     ; use print syscall to print the element of the array
     mov ecx, eax                
@@ -462,13 +462,13 @@ print_array:
     mov ebx, 1
     int 0x80
 
-    pop edx                             ; restore the buffer
-    pop edi                             ; restore the array
-    pop ecx                             ; restore the array length
-    pop esi                             ; restore the counter
+    pop edx                                     ; restore the buffer
+    pop edi                                     ; restore the array
+    pop ecx                                     ; restore the array length
+    pop esi                                     ; restore the counter
     
-    inc esi                             ; increment the counter
-    jmp .loop                           ; jump to the next iteration
+    inc esi                                     ; increment the counter
+    jmp .loop                                   ; jump to the next iteration
 .end:
     ret
 
@@ -477,31 +477,31 @@ print_array:
 
 ; arguments: edi=buffer
 atoi:
-    xor eax, eax                        ; clear eax
-    xor ebx, ebx                        ; clear ebx
+    xor eax, eax                                ; clear eax
+    xor ebx, ebx                                ; clear ebx
 
-    mov dl, [edi]                       ; move value stored in [edi] to 8-bit register dl
-    cmp dl, '-'                         ; compare byte stored in dl to minus sign '-'
-    jne .loop                           ; if dl is not equal to minus sign then jump to the loop
+    mov dl, [edi]                               ; move value stored in [edi] to 8-bit register dl
+    cmp dl, '-'                                 ; compare byte stored in dl to minus sign '-'
+    jne .loop                                   ; if dl is not equal to minus sign then jump to the loop
 
-    mov bl, 1                           ; if dl is equal to minus sign then move 1 into bl. Here I set the value of bl to 1 and use it as a boolean to later determine if the input was negative or not 
-    inc edi                             ; increment edi to go to the next byte in the buffer
+    mov bl, 1                                   ; if dl is equal to minus sign then move 1 into bl. Here I set the value of bl to 1 and use it as a boolean to later determine if the input was negative or not 
+    inc edi                                     ; increment edi to go to the next byte in the buffer
     jmp .loop
 .loop:
-    movzx edx, byte [edi]               ; move a byte from the buffer into edx, padded with zeros everywhere else
-    cmp dl, 0x0A                        ; compare the byte from edx to the newline character
-    je .end                             ; if dl == newline, then the last character in the string has already been converted to an integer
+    movzx edx, byte [edi]                       ; move a byte from the buffer into edx, padded with zeros everywhere else
+    cmp dl, 0x0A                                ; compare the byte from edx to the newline character
+    je .end                                     ; if dl == newline, then the last character in the string has already been converted to an integer
 
-    imul eax, 10                        ; eax contains the converted integer. we add a zero to it by multiplying by 10
-    sub edx, '0'                        ; subtract from the byte in edx '0' which converts it to an integer
-    add eax, edx                        ; add the converted integer to eax
+    imul eax, 10                                ; eax contains the converted integer. we add a zero to it by multiplying by 10
+    sub edx, '0'                                ; subtract from the byte in edx '0' which converts it to an integer
+    add eax, edx                                ; add the converted integer to eax
 
-    inc edi                             ; increment the buffer to go to the next character
+    inc edi                                     ; increment the buffer to go to the next character
     jmp .loop
 .end:
-    cmp bl, 1                           ; compare bl to 1
-    jne .done                           ; if bl is 1 then the input was negative and the converted integer should be negated to make it negative
-    neg eax                             ; negate eax which will be the return value
+    cmp bl, 1                                   ; compare bl to 1
+    jne .done                                   ; if bl is 1 then the input was negative and the converted integer should be negated to make it negative
+    neg eax                                     ; negate eax which will be the return value
 .done:
     ret
 
@@ -509,42 +509,42 @@ atoi:
 
 
 itoa:
-    mov ecx, 10                         ; divisor
-    xor esi, esi                        ; clear esi
+    mov ecx, 10                                 ; divisor
+    xor esi, esi                                ; clear esi
     
     mov ebx, eax                
-    cmp eax, 0                          ; compare eax to zero to check if its positive
-    jge .loop1                          ; if eax is positive, then jump to the loop
+    cmp eax, 0                                  ; compare eax to zero to check if its positive
+    jge .loop1                                  ; if eax is positive, then jump to the loop
     
-    neg eax                             ; if not then negate eax to make it positive
+    neg eax                                     ; if not then negate eax to make it positive
 .loop1:
-    cdq                                 ; prepare edx:eax for division
-    idiv ecx                            ; divide edx:eax by ecx (10)
-    push edx                            ; push the remainder onto the stack
-    inc esi                             ; increment the remainder counter
-    test eax, eax                       ; check if eax is zero
-    jne .loop1                          ; if not then jump to next iteration. if it is then go to loop2
+    cdq                                         ; prepare edx:eax for division
+    idiv ecx                                    ; divide edx:eax by ecx (10)
+    push edx                                    ; push the remainder onto the stack
+    inc esi                                     ; increment the remainder counter
+    test eax, eax                               ; check if eax is zero
+    jne .loop1                                  ; if not then jump to next iteration. if it is then go to loop2
 
-    mov eax, edi                        ; this will be returned. it is the base address of the buffer
+    mov eax, edi                                ; this will be returned. it is the base address of the buffer
 
-    cmp ebx, 0                          ; compare ebx, which contains the original value of eax, to 0
-    jge .loop2                          ; if ebx is positive, then jump to loop2
+    cmp ebx, 0                                  ; compare ebx, which contains the original value of eax, to 0
+    jge .loop2                                  ; if ebx is positive, then jump to loop2
     
-    mov byte [edi], '-'                 ; if not, then mov a negative sign "-" to edi. This will be the first character in edi, and denotes that the integer is negative
-    inc edi                             ; increment edi to move to the next byte in the buffer
+    mov byte [edi], '-'                         ; if not, then mov a negative sign "-" to edi. This will be the first character in edi, and denotes that the integer is negative
+    inc edi                                     ; increment edi to move to the next byte in the buffer
 .loop2:
-    pop edx                             ; pop a remainder from the stack
-    add dl, '0'                         ; append a '0' to convert it to ascii
-    mov [edi], dl                       ; mov it into the buffer
-    inc edi                             ; increment the buffer so we can append the next digit
-    dec esi                             ; decrement the remainder counter
-    jnz .loop2                          ; if esi is not zero then jump to next iteration. if it is then the loop is done
+    pop edx                                     ; pop a remainder from the stack
+    add dl, '0'                                 ; append a '0' to convert it to ascii
+    mov [edi], dl                               ; mov it into the buffer
+    inc edi                                     ; increment the buffer so we can append the next digit
+    dec esi                                     ; decrement the remainder counter
+    jnz .loop2                                  ; if esi is not zero then jump to next iteration. if it is then the loop is done
 
-    mov byte [edi], 0x20                ; append a space character to the buffer
-    inc edi                             ; increment the buffer
+    mov byte [edi], 0x20                        ; append a space character to the buffer
+    inc edi                                     ; increment the buffer
 
-    mov edx, edi                        ; move the address of the buffer into edx
-    sub edx, eax                        ; calculate length of the buffer by subtracting the current address with the base address that was previously stored in eax
+    mov edx, edi                                ; move the address of the buffer into edx
+    sub edx, eax                                ; calculate length of the buffer by subtracting the current address with the base address that was previously stored in eax
 
     ret
 
@@ -552,45 +552,45 @@ itoa:
 
 
 partition:
-    mov ecx, esi                        ; move start index to j
-    mov ebx, esi                        ; move start index to i
+    mov ecx, esi                                ; move start index to j
+    mov ebx, esi                                ; move start index to i
     dec ebx
 
-    cmp ecx, edx                        ; compare j to end index
-    jl .loop                            ; if j smaller than end, enter loop
-    jge .end                            ; else go to end of loop
+    cmp ecx, edx                                ; compare j to end index
+    jl .loop                                    ; if j smaller than end, enter loop
+    jge .end                                    ; else go to end of loop
 .loop:   
-    mov eax, [edi + ecx*4]              ; move element of arr at index j into eax
-    cmp eax, [edi + edx*4]              ; compare element of arr at index j to element of arr at index end
-    jg .continue                        ; if arr[j] > arr[end] do nothing, go to next iteration
+    mov eax, [edi + ecx*4]                      ; move element of arr at index j into eax
+    cmp eax, [edi + edx*4]                      ; compare element of arr at index j to element of arr at index end
+    jg .continue                                ; if arr[j] > arr[end] do nothing, go to next iteration
 
-    inc ebx                             ; else i++ and swap arr[i] with arr[j]
+    inc ebx                                     ; else i++ and swap arr[i] with arr[j]
     
-    push esi                            ; push esi to save current value and free it for use
-    mov esi, ebx                        ; move i into esi
+    push esi                                    ; push esi to save current value and free it for use
+    mov esi, ebx                                ; move i into esi
 
-    push ebx                            ; push ebx to save current value and free it for use
+    push ebx                                    ; push ebx to save current value and free it for use
 
     ; swap ith element with jth element
-    mov eax, [edi + esi*4]              ; ith element
-    mov ebx, [edi + ecx*4]              ; jth element
-    mov [edi + ecx*4], eax              ; move ith element into jth index
-    mov [edi + esi*4], ebx              ; move jth element into ith index
+    mov eax, [edi + esi*4]                      ; ith element
+    mov ebx, [edi + ecx*4]                      ; jth element
+    mov [edi + ecx*4], eax                      ; move ith element into jth index
+    mov [edi + esi*4], ebx                      ; move jth element into ith index
      
-    pop ebx                             ; pop ebx to restore its value
-    pop esi                             ; pop esi to restore its value 
+    pop ebx                                     ; pop ebx to restore its value
+    pop esi                                     ; pop esi to restore its value 
 
     jmp .continue                      
 
 .continue:
-        inc ecx                         ; increment j to access the next element
-        cmp ecx, edx                    ; compare j to the end index
-        jl .loop                        ; if j is smaller than end, jump to start of loop for the next iteration
+        inc ecx                                 ; increment j to access the next element
+        cmp ecx, edx                            ; compare j to the end index
+        jl .loop                                ; if j is smaller than end, jump to start of loop for the next iteration
 .end:
-        mov ecx, ebx                    ; move i into ecx
-        add ecx, 1                      ; add 1 to ecx
+        mov ecx, ebx                            ; move i into ecx
+        add ecx, 1                              ; add 1 to ecx
         
-        push ebx                        ; push ebx to save its current value and free it for use
+        push ebx                                ; push ebx to save its current value and free it for use
 
         ; swap i+1 element with end element 
         mov eax, [edi + ecx*4]
@@ -598,80 +598,80 @@ partition:
         mov [edi + ecx*4], ebx
         mov [edi + edx*4], eax
 
-        pop ebx                         ; pop ebx to restore its value
+        pop ebx                                 ; pop ebx to restore its value
 
-        mov eax, ebx                    ; move i into eax
-        add eax, 1                      ; add 1 to eax
-        ret                             ; return (eax will be returned)
+        mov eax, ebx                            ; move i into eax
+        add eax, 1                              ; add 1 to eax
+        ret                                     ; return (eax will be returned)
 
 
 
 
 quicksort:
-    cmp esi, edx                        ; compare esi (start) to edx (end)
-    jge .base_case                      ; if start is greater than or equal to then we need to exit
+    cmp esi, edx                                ; compare esi (start) to edx (end)
+    jge .base_case                              ; if start is greater than or equal to then we need to exit
 
-    call partition                      ; call partition to sort 
+    call partition                              ; call partition to sort 
 
-                                        ; left partition
-    push edx                            ; save edx (end)
-    mov edx, eax                        ; move the return value from partition call to edx
-    dec edx                             ; decrement edx
+                                                ; left partition
+    push edx                                    ; save edx (end)
+    mov edx, eax                                ; move the return value from partition call to edx
+    dec edx                                     ; decrement edx
     
-    call quicksort                      ; call quicksort on left partition
+    call quicksort                              ; call quicksort on left partition
 
-    pop edx                             ; pop back edx to restore value from before recuesive call
+    pop edx                                     ; pop back edx to restore value from before recuesive call
 
-    push esi                            ; save esi by pushing to stack (start)
-    mov esi, eax                        ; move the return value from partition call to esi
-    inc esi                             ; increment esi
+    push esi                                    ; save esi by pushing to stack (start)
+    mov esi, eax                                ; move the return value from partition call to esi
+    inc esi                                     ; increment esi
 
-    call quicksort                      ; call quicksort on right partition
+    call quicksort                              ; call quicksort on right partition
 
-    pop esi                             ; pop back esi to restore value from before recursive call
-.base_case:                             ; in the base case we just need to exit the function
+    pop esi                                     ; pop back esi to restore value from before recursive call
+.base_case:                                     ; in the base case we just need to exit the function
     ret
 
 
 
 
 binary_search:
-    mov edx, esi                        ; array length
+    mov edx, esi                                ; array length
 
-    xor esi, esi                        ; esi used to hold low index
-    xor ecx, ecx                        ; ecx used to hold mid index
+    xor esi, esi                                ; esi used to hold low index
+    xor ecx, ecx                                ; ecx used to hold mid index
 .loop:
-    cmp esi, edx                        ; Compare low index to high index
-    jg .not_found                       ; If low is greater than high, then exit by jumping to not_found
+    cmp esi, edx                                ; Compare low index to high index
+    jg .not_found                               ; If low is greater than high, then exit by jumping to not_found
 
-    mov eax, esi                        ; move low index to eax
-    add eax, edx                        ; add high to low
-    shr eax, 1                          ; shift right by 1 bit to divide by 2
-    mov ecx, eax                        ; mov the quotient into ecx
+    mov eax, esi                                ; move low index to eax
+    add eax, edx                                ; add high to low
+    shr eax, 1                                  ; shift right by 1 bit to divide by 2
+    mov ecx, eax                                ; mov the quotient into ecx
 
-    mov eax, [edi + ecx*4]              ; Move element at index mid into eax
+    mov eax, [edi + ecx*4]                      ; Move element at index mid into eax
 
     ; compare the target to the element at the current middle index
     cmp ebx, eax           
-    jg .greater_than                    ; target > arr[mid]                
-    jl .less_than                       ; target < arr[mid]
-    je .found                           ; target == arr[mid]
+    jg .greater_than                            ; target > arr[mid]                
+    jl .less_than                               ; target < arr[mid]
+    je .found                                   ; target == arr[mid]
 
-.greater_than:                          ; target is greater than arr[mid] so we update low to be mid+1
-    mov esi, ecx                        ; move mid into esi
-    inc esi                             ; increment by 1
-    jmp .loop                           ; jump to the beginning of the binary_search section
+.greater_than:                                  ; target is greater than arr[mid] so we update low to be mid+1
+    mov esi, ecx                                ; move mid into esi
+    inc esi                                     ; increment by 1
+    jmp .loop                                   ; jump to the beginning of the binary_search section
 
-.less_than:                             ; target is less than arr[mid] so we update high, edx, to be mid - 1
-    mov edx, ecx                        ; move mid into edx
-    dec edx                             ; decrement by 1
-    jmp .loop                           ; jump to the beginning of the binary_search section
+.less_than:                                     ; target is less than arr[mid] so we update high, edx, to be mid - 1
+    mov edx, ecx                                ; move mid into edx
+    dec edx                                     ; decrement by 1
+    jmp .loop                                   ; jump to the beginning of the binary_search section
 
 .found:                           
-    mov eax, ecx                        ; target was found so we exit and return the index by moving it into eax
+    mov eax, ecx                                ; target was found so we exit and return the index by moving it into eax
     ret                                 
 
-.not_found:                             ; the loop ended and the target was not found
-    mov eax, -1                         ; the target was not found, so we exit and return -1 to indicate thatthe search was unsuccessful
+.not_found:                                     ; the loop ended and the target was not found
+    mov eax, -1                                 ; the target was not found, so we exit and return -1 to indicate thatthe search was unsuccessful
     ret                            
 
