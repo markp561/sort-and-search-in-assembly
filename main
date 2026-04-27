@@ -1,5 +1,5 @@
 section     .data
-    quicksort_label         db "q", 0x09, "i", 0x09, "j", 0x09, "high", 0x09, "low", 0x09, "arr"
+    quicksort_label         db "q", 0x09, "", 0x09, "", 0x09, "high", 0x09, "low", 0x09, "arr"
     quicksort_label_len     equ ($ - quicksort_label)
 
     partition_label         db "arr_i/arr_j/q i", 0x09, "j", 0x09, "high", 0x09, "low", 0x09, "arr"
