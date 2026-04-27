@@ -1,6 +1,42 @@
 section     .data
+    quicksort_label         db "q", 0x09, "i", 0x09, "j", 0x09, "high", 0x09, "low", 0x09, "arr"
+    quicksort_label_len     equ ($ - quicksort_label)
+
+    partition_label         db "arr_i/arr_j/q i", 0x09, "j", 0x09, "high", 0x09, "low", 0x09, "arr"
+    partition_label_len     equ ($ - partition_label)
+
+
+; parameters:   arr, low index, high index, 
+; passed using: [edi-arr], [esi-low], [edx-high]
+; intermediate registers: [ebx-i], [ecx-j], [eax-arr[i] and arr[j]], [eax-used to return value, q]
+
+
+
+
+        
+    binary_search_label     db "arr_mid target", 0x09, "mid", 0x09, "high", 0x09, "low", 0x09, "arr"
+    binary_search_label_len equ ($ - binary_search_label)
+
+
+    label1                  db "EAX:"
+    label1_len              equ ($ - label1)
+
+    label2                  db "EBX:"
+    label2_len              equ ($ - label2)
+
+    label3                  db "ECX:"
+    label3_len              equ ($ - label3)
     
-       
+    label4                  db "EDX:"
+    label4_len              equ ($ - label4)
+
+    label5                  db "ESI:"
+    label5_len              equ ($ - label5)
+
+    label6                  db "EDI:"
+    label6_len              equ ($ - label6)
+
+
     array_msg1              db "Original order: "
     array_msg1_len          equ ($ - array_msg1)
 
@@ -35,11 +71,12 @@ section     .data
     exit_msg_len            equ ($ - exit_msg)
 
     nl                      db 0x0A
-    hl                      db "--------------------------------------------------", 0x0A
+    tab                     db 0x09
+    hl                      db "______________________________________________________________________", 0x0A
     hl_len                  equ ($ - hl)
 
     arr_len                 dd 0
-    max_elements            equ 10000
+    max_elements            equ 100000
 
 
 section     .bss
@@ -52,6 +89,7 @@ section     .text
 
 
 _start:
+    call print_registers
     ; print horizontal line
     call horizontal_line
     
@@ -71,9 +109,11 @@ _start:
     mov edx, 16                                 ; size of buffer
     int 0x80                                    ; interrupt
 
+
     xor eax, eax                                ; clear eax
     mov edi, buffer                             ; move the buffer into edi
     call atoi                                   ; convert ascii to integer
+
 
     cmp eax, max_elements                       ; check if the input is less than or equal to the value of max_elements
     jle .valid_data_size                        ; if so, then jump to the next section, titled valid_data_size and continue with the program
@@ -99,6 +139,7 @@ _start:
 
  
 .valid_data_size:
+    call print_registers
 
     mov [arr_len], eax                          ; store the integer in the arr_len label
     
@@ -387,6 +428,31 @@ newline:
     
     ret
 
+print_tab:            
+    ; save the following registers
+    push eax                        
+    push ebx
+    push ecx
+    push edx
+    
+    ; use print system call to print nl, which contains hexadecimal representation for newline character, 0x0A
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, tab
+    mov edx, 1
+    int 0x80
+    
+    ; pop all the registers that were pushed to restore their contents
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    
+    ret
+
+
+
+
 ; this function prints a horizontal line of fifty dashes, "-"
 ; no arguments needed to call this function
 horizontal_line:
@@ -410,6 +476,8 @@ horizontal_line:
     pop eax
     
     ret
+
+
 
 
 ; this function takes a string and prints it
@@ -436,6 +504,8 @@ print:
     pop eax
     
     ret
+
+
 
 
 ; arguments: esi=array_len, edi=arr, edx=buffer,
@@ -508,6 +578,8 @@ atoi:
 
 
 
+; parameters:    integer, buffer
+; passed using:  eax, edi
 itoa:
     mov ecx, 10                                 ; divisor
     xor esi, esi                                ; clear esi
@@ -550,8 +622,26 @@ itoa:
 
 
 
-
+; parameters:   arr, low index, high index, 
+; passed using: [edi-arr], [esi-low], [edx-high]
+; intermediate registers: [ebx-i], [ecx-j], [eax-arr[i] and arr[j]], [eax-used to return value, q]
 partition:
+    call horizontal_line
+    push edi
+    push esi
+
+    mov edi, partition_label
+    mov esi, partition_label_len
+
+    call print
+    call newline
+
+    pop esi
+    pop edi
+
+    call print_registers
+    
+
     mov ecx, esi                                ; move start index to j
     mov ebx, esi                                ; move start index to i
     dec ebx
@@ -607,40 +697,94 @@ partition:
 
 
 
+    mov edi, arr
+    mov esi, 0
+    mov edx, [arr_len]
+    dec edx
+    call quicksort
+
+
+; parameters:   arr, low index, high index
+; passed using: [edi-arr], [esi-low], [edx-high]
 quicksort:
+    call horizontal_line
+    push edi
+    push esi
+
+    mov edi, quicksort_label
+    mov esi, quicksort_label_len
+
+    call print
+    call newline
+
+    pop esi
+    pop edi
+
+    call print_registers
+
+
     cmp esi, edx                                ; compare esi (start) to edx (end)
     jge .base_case                              ; if start is greater than or equal to then we need to exit
 
-    call partition                              ; call partition to sort 
-
-                                                ; left partition
-    push edx                                    ; save edx (end)
-    mov edx, eax                                ; move the return value from partition call to edx
-    dec edx                                     ; decrement edx
+    call partition                              ; otherwise, call partition to sort 
     
-    call quicksort                              ; call quicksort on left partition
+    call print_registers                        ; display registers after partition
+
+                                                ; left sub-array
+    push edx                                    ; save edx (end) by pushing to the stack
+    mov edx, eax                                ; move the return value from partition call to edx
+    dec edx                                     ; decrement edx (q-1)
+    
+    call print_registers                        ; display registers 
+    call quicksort                              ; call quicksort on left sub-array
 
     pop edx                                     ; pop back edx to restore value from before recuesive call
 
-    push esi                                    ; save esi by pushing to stack (start)
+                                                ; right sub-array
+    push esi                                    ; save esi (start) by pushing to the stack
     mov esi, eax                                ; move the return value from partition call to esi
-    inc esi                                     ; increment esi
-
-    call quicksort                              ; call quicksort on right partition
-
+    inc esi                                     ; increment esi (q+1)
+    
+    call print_registers                        ; display registers
+    call quicksort                              ; call quicksort on right sub-array
+    
+    call print_registers
     pop esi                                     ; pop back esi to restore value from before recursive call
+
 .base_case:                                     ; in the base case we just need to exit the function
+    call print_registers                        ; display the registers after sorting is complete
     ret
 
 
-
-
+; parameters:        pointer to base of array, length of array, pointer to the search target
+; passed using:      edi, esi, ebx 
+; register purposes: [eax-element at middle index], [ebx-target], [ecx-middle index], [edx-high index], [edi-base address of array], [esi-low index]
 binary_search:
-    mov edx, esi                                ; array length
+    call horizontal_line
 
+    push edi
+    push esi
+
+    mov edi, binary_search_label
+    mov esi, binary_search_label_len
+
+    call print
+    call newline
+
+    pop esi
+    pop edi
+        
+    
+    mov edx, esi                                ; array length; also serves as high index
+
+    xor eax, eax
     xor esi, esi                                ; esi used to hold low index
     xor ecx, ecx                                ; ecx used to hold mid index
+
+    call print_registers
+
 .loop:
+    call print_registers
     cmp esi, edx                                ; Compare low index to high index
     jg .not_found                               ; If low is greater than high, then exit by jumping to not_found
 
@@ -669,9 +813,245 @@ binary_search:
 
 .found:                           
     mov eax, ecx                                ; target was found so we exit and return the index by moving it into eax
+    call print_registers
     ret                                 
 
 .not_found:                                     ; the loop ended and the target was not found
     mov eax, -1                                 ; the target was not found, so we exit and return -1 to indicate thatthe search was unsuccessful
+    call print_registers
     ret                            
+
+
+
+
+print_registers:
+
+    push edi
+    push esi
+    push edx
+    push ecx
+    push ebx
+
+    ;call newline
+    call horizontal_line                        ; print a horizontal line
+    ;call newline                                ; print a newline character
+
+    call print_eax
+    call print_tab 
+    pop ebx
+    call print_ebx
+    call print_tab
+    pop ecx
+    call print_ecx
+    call print_tab
+    pop edx
+    call print_edx
+    call print_tab 
+    pop esi
+    call print_esi
+    call print_tab 
+    pop edi
+    call print_edi
+    call newline
+    
+    ;call horizontal_line
+    ;call newline
+
+    ret
+
+
+
+
+print_eax:
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+
+    mov ecx, eax
+    push eax    
+
+    mov edi, label1
+    mov esi, label1_len
+    call print
+
+    mov eax, ecx
+    mov edi, buffer
+    call itoa
+
+    ; then print the contents of the register
+    mov edi, eax 
+    mov esi, edx
+    call print
+
+    pop eax
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+ 
+    ret
+
+print_ebx:
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+
+    mov ecx, ebx
+    push ebx
+    
+    mov edi, label2
+    mov esi, label2_len
+    call print
+
+    mov eax, ecx
+    mov edi, buffer
+    call itoa
+
+    ; then print the contents of the register
+    mov edi, eax 
+    mov esi, edx
+    call print
+
+    pop ebx
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+ 
+    ret
+
+print_ecx:
+    push eax
+    push ebx
+    push edx
+    push esi
+    push edi
+
+    mov ebx, ecx
+    push ecx
+
+    mov edi, label3
+    mov esi, label3_len
+    call print
+
+    mov eax, ebx
+    mov edi, buffer
+    call itoa
+
+    ; then print the contents of the register
+    mov edi, eax 
+    mov esi, edx
+    call print
+ 
+    pop ecx
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+
+    ret
+
+print_edx:
+    push eax
+    push ebx
+    push ecx
+    push esi
+    push edi
+
+    mov ecx, edx
+    push edx
+
+    mov edi, label4
+    mov esi, label4_len
+    call print
+
+    mov eax, ecx
+    mov edi, buffer
+    call itoa
+
+    ; then print the contents of the register
+    mov edi, eax 
+    mov esi, edx
+    call print
+
+    pop edx
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+
+    ret
+
+print_esi:
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push edi
+
+    mov ecx, esi
+    push esi
+
+    mov edi, label5
+    mov esi, label5_len
+    call print
+
+    mov eax, ecx
+    mov edi, buffer
+    call itoa
+
+    ; then print the contents of the register
+    mov edi, eax 
+    mov esi, edx
+    call print
+
+
+    pop esi
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+
+print_edi:
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+
+    mov ecx, edi
+    push edi
+
+    mov edi, label6
+    mov esi, label6_len
+    call print
+
+    mov eax, ecx
+    mov edi, buffer
+    call itoa
+
+    ; then print the contents of the register
+    mov edi, eax 
+    mov esi, edx
+    call print
+ 
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+
+    ret
+
 
